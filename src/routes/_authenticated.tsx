@@ -6,6 +6,7 @@ import { Sidebar } from "@/components/Sidebar";
 import { MobileNav } from "@/components/MobileNav";
 import { NewOrderModal } from "@/components/NewOrderModal";
 import { BackgroundSync } from "@/components/BackgroundSync";
+import { OnboardingWizard } from "@/components/OnboardingWizard";
 import { useAuth } from "@/lib/auth";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -16,10 +17,23 @@ function AuthLayout() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
+  const [showOnboard, setShowOnboard] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/login" });
   }, [loading, user, navigate]);
+
+  useEffect(() => {
+    if (!loading && user) {
+      const key = `orderly_onboarded_${user.email}`;
+      if (!localStorage.getItem(key)) setShowOnboard(true);
+    }
+  }, [loading, user]);
+
+  function closeOnboard() {
+    if (user) localStorage.setItem(`orderly_onboarded_${user.email}`, "1");
+    setShowOnboard(false);
+  }
 
   if (loading || !user) {
     return (
@@ -39,6 +53,7 @@ function AuthLayout() {
         <NewOrderModal open={modalOpen} onClose={() => setModalOpen(false)} />
         <BackgroundSync />
         <MobileNav onNewOrder={() => setModalOpen(true)} />
+        <OnboardingWizard open={showOnboard} onClose={closeOnboard} />
       </div>
     </StoreProvider>
   );
