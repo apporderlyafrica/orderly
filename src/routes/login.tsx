@@ -19,7 +19,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (user) navigate({ to: ((user as any)?.user_metadata?.role === "client") ? "/orders" : "/dashboard" });
+    if (user) { const r = (user as any)?.user_metadata?.role; navigate({ to: (r === "client" || r === "closer") ? "/orders" : "/dashboard" }); }
   }, [user, navigate]);
 
   async function onSubmit(e: React.FormEvent) {

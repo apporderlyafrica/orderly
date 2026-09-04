@@ -18,6 +18,7 @@ import {
 } from "./store.functions";
 import { DEFAULT_SETTINGS, DEFAULT_SHEET_SYNC, type Channel, type DeliveryZone, type Order, type OrderStatus, type Product, type Settings, type SheetSyncSettings, type User } from "./store-data";
 import { useAuth } from "./auth";
+import { supabase } from "@/integrations/supabase/client";
 import type { SheetRow } from "./sheets.functions";
 
 export type TeamMember = { id: string; email?: string; name: string; role: string; merchantId?: string };
@@ -89,6 +90,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (rec) {
         role = rec.role ?? role;
         merchantId = rec.merchantId ?? merchantId;
+        if (meta.role !== rec.role || meta.merchantId !== rec.merchantId) {
+          supabase.auth.updateUser({ data: { role: rec.role, merchantId: rec.merchantId } }).catch(() => {});
+        }
       }
     } catch { setTeamMembers([]); }
     const data = await loadFn({ data: { role, merchantId, clientId, email: user?.email } });

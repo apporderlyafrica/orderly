@@ -9,10 +9,12 @@ export function MobileNav({ onNewOrder }: Props) {
   const { user } = useAuth();
   const role = ((user as any)?.user_metadata ?? {}).role;
   const isClient = role === "client";
+  const isCloser = role === "closer";
+  const isLimited = isClient || isCloser;
 
-  const tabs = isClient
+  const tabs = isLimited
     ? [
-        { to: "/orders", label: "Mes commandes", icon: ShoppingBag },
+        { to: "/orders", label: isClient ? "Mes commandes" : "Commandes", icon: ShoppingBag },
         { to: "/profile", label: "Profil", icon: UserRound },
       ]
     : [
@@ -22,7 +24,7 @@ export function MobileNav({ onNewOrder }: Props) {
         { to: "/settings", label: "Réglages", icon: Settings },
       ];
 
-  if (isClient) {
+  if (isLimited) {
     return (
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 h-16 bg-surface/90 backdrop-blur-md border-t border-border flex items-stretch px-2">
         {tabs.map((t) => {

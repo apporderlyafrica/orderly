@@ -35,8 +35,17 @@ function SettingsPage() {
     setMErr(null);
     if (!name.trim()) { setMErr("Nom requis."); return; }
     if (email && !email.includes("@")) { setMErr("Email invalide."); return; }
-    await addMember({ name: name.trim(), email: email.trim() || undefined, role, merchantId: role === "merchant" ? (merchantId || undefined) : undefined });
-    setName(""); setEmail(""); setRole("member"); setMerchantId("");
+    try {
+      await addMember({ name: name.trim(), email: email.trim() || undefined, role, merchantId: role === "merchant" ? (merchantId || undefined) : undefined });
+      setName(""); setEmail(""); setRole("member"); setMerchantId("");
+    } catch (err: any) {
+      const msg = String(err?.message || err || "");
+      if (/relation|does not exist|workspace_members|schema cache/i.test(msg)) {
+        setMErr("Table manquante sur Supabase → exécute le script « supabase/schema.sql » dans SQL Editor → Run, puis réessaie.");
+      } else {
+        setMErr("Impossible d'ajouter le membre : " + msg.slice(0, 140));
+      }
+    }
   }
 
   async function promptAddUser() {

@@ -73,10 +73,10 @@ CREATE TABLE IF NOT EXISTS public.workspaces (
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS client_id text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS client_email text;
 
--- Membres d'un espace (rôle : owner | member | merchant | client)
+-- Membres d'un espace (rôle : owner | member | merchant | closer | client)
 CREATE TABLE IF NOT EXISTS public.workspace_members (
   id text PRIMARY KEY,
-  workspace_id text NOT NULL,
+  workspace_id text NOT NULL DEFAULT 'main',
   email text,
   name text,
   role text NOT NULL DEFAULT 'member',

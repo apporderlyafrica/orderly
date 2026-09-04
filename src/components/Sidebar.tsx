@@ -26,8 +26,10 @@ export function Sidebar({ onNewOrder }: Props) {
   const { user } = useAuth();
   const role = ((user as any)?.user_metadata ?? {}).role;
   const isClient = role === "client";
-  const navLinks = isClient ? [{ to: "/orders", label: "Mes commandes", icon: ShoppingBag }] : mainLinks;
-  const acctLinks = isClient ? [{ to: "/profile", label: "Profil", icon: UserRound }] : accountLinks;
+  const isCloser = role === "closer";
+  const isLimited = isClient || isCloser;
+  const navLinks = isLimited ? [{ to: "/orders", label: isClient ? "Mes commandes" : "Commandes", icon: ShoppingBag }] : mainLinks;
+  const acctLinks = isLimited ? [{ to: "/profile", label: "Profil", icon: UserRound }] : accountLinks;
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -43,7 +45,7 @@ export function Sidebar({ onNewOrder }: Props) {
         </button>
       </div>
 
-      {!isClient && (
+      {!isLimited && (
         <div className="p-2 space-y-1.5">
           <button onClick={() => { onNewOrder(); setOpen(false); }}
             className="w-full inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition shadow-[0_4px_16px_rgba(117,251,144,0.4)]">
