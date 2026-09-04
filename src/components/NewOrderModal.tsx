@@ -16,6 +16,7 @@ export function NewOrderModal({ open, onClose }: Props) {
   const [upsellIds, setUpsellIds] = useState<string[]>([]);
   const [deliveryRegion, setDeliveryRegion] = useState<DeliveryZone | "">("");
   const [address, setAddress] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
   const [paid, setPaid] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,8 +76,8 @@ export function NewOrderModal({ open, onClose }: Props) {
     if (addr.length < 2 || addr.length > 80) return setError("Adresse de livraison invalide.");
 
     const cleanUpsells = upsellIds.filter((id) => id !== productId);
-    addOrder({ customer: name, phone: ph, productId, city: addr, upsellIds: cleanUpsells, deliveryZone: deliveryRegion, paid, userId: userId || undefined, channelId: channelId || undefined });
-    setCustomer(""); setPhone(""); setUserId(""); setChannelId(""); setAddress(""); setUpsellIds([]); setProductId(visibleProducts[0]?.id ?? ""); setDeliveryRegion(""); setPaid(false);
+    addOrder({ customer: name, phone: ph, productId, city: addr, upsellIds: cleanUpsells, deliveryZone: deliveryRegion, paid, userId: userId || undefined, channelId: channelId || undefined, clientEmail: clientEmail.trim() || undefined });
+    setCustomer(""); setPhone(""); setUserId(""); setChannelId(""); setAddress(""); setClientEmail(""); setUpsellIds([]); setProductId(visibleProducts[0]?.id ?? ""); setDeliveryRegion(""); setPaid(false);
     onClose();
   }
 
@@ -171,6 +172,10 @@ export function NewOrderModal({ open, onClose }: Props) {
               </p>
             </>
           )}
+
+          <Field label="Email client (optionnel)">
+            <input value={clientEmail} onChange={(e) => setClientEmail(e.target.value)} type="email" maxLength={80} className={inputCls} placeholder="ex: client@email.com — il pourra suivre sa commande" />
+          </Field>
 
           <label className="flex items-center gap-2.5 cursor-pointer select-none pt-1">
             <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} className="h-4 w-4 accent-foreground" />

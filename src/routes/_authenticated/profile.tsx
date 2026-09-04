@@ -21,6 +21,9 @@ function ProfilePage() {
     navigate({ to: "/" });
   }
 
+  const meta = ((user as any)?.user_metadata ?? {}) as { role?: string; orgName?: string; accountType?: string };
+  const roleLabel = (role?: string) => (role === "client" ? "Client" : "Propriétaire / Équipe");
+
   return (
     <div className="px-4 sm:px-8 py-6 sm:py-10 max-w-3xl mx-auto">
       <header className="mb-6">
@@ -58,9 +61,9 @@ function ProfilePage() {
         <h2 className="text-sm font-semibold mb-3">Informations du compte</h2>
         <div className="space-y-2">
           <InfoRow icon={Mail} label="Email" value={user?.email ?? "—"} />
-          <InfoRow icon={UserRound} label="Identifiant" value={user?.id ?? "—"} />
-          <InfoRow icon={ShieldCheck} label="Authentification" value="Mode local (aucun compte)" />
-          <InfoRow icon={Building2} label="Espace de travail" value="Orderly · local" />
+          <InfoRow icon={UserRound} label="Rôle" value={roleLabel(meta.role)} />
+          <InfoRow icon={Building2} label="Espace de travail" value={meta.orgName ?? "—"} />
+          <InfoRow icon={ShieldCheck} label="Authentification" value="Compte Supabase" />
         </div>
       </section>
 

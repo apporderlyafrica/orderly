@@ -2,10 +2,12 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 import { useServerFn } from "@tanstack/react-start";
 import {
   addChannel,
+  addTeamMember,
   addUser,
   createOrder,
   createProduct,
   importRows,
+  listTeamMembers,
   loadAppData,
   patchProduct,
   removeOrders,
@@ -15,13 +17,17 @@ import {
   setOrderStatus,
 } from "./store.functions";
 import { DEFAULT_SETTINGS, DEFAULT_SHEET_SYNC, type Channel, type DeliveryZone, type Order, type OrderStatus, type Product, type Settings, type SheetSyncSettings, type User } from "./store-data";
+import { useAuth } from "./auth";
 import type { SheetRow } from "./sheets.functions";
+
+export type TeamMember = { id: string; email?: string; name: string; role: string; merchantId?: string };
 
 type StoreCtx = {
   orders: Order[];
   products: Product[];
   users: User[];
   channels: Channel[];
+  teamMembers: TeamMember[];
   settings: Settings;
   sheetSync: SheetSyncSettings;
   loading: boolean;
@@ -30,7 +36,8 @@ type StoreCtx = {
   updateSheetSync: (s: SheetSyncSettings) => Promise<void>;
   addUser: (name: string) => Promise<User>;
   addChannel: (name: string) => Promise<Channel>;
-  addOrder: (input: { customer: string; phone: string; productId: string; city: string; upsellIds?: string[]; deliveryZone?: DeliveryZone; paid?: boolean; userId?: string; channelId?: string }) => Promise<void>;
+  addMember: (m: { email?: string; name: string; role: string; merchantId?: string }) => Promise<void>;
+  addOrder: (input: { customer: string; phone: string; productId: string; city: string; upsellIds?: string[]; deliveryZone?: DeliveryZone; paid?: boolean; userId?: string; channelId?: string; clientEmail?: string }) => Promise<void>;
   updateStatus: (id: number, status: OrderStatus) => Promise<void>;
   deleteOrder: (id: number) => Promise<void>;
   deleteOrders: (ids: number[]) => Promise<void>;
@@ -57,17 +64,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const importRowsFn = useServerFn(importRows);
   const addUserFn = useServerFn(addUser);
   const addChannelFn = useServerFn(addChannel);
+  const addTeamMemberFn = useServerFn(addTeamMember);
+  const listTeamMembersFn = useServerFn(listTeamMembers);
+  const { user } = useAuth();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
   const [sheetSync, setSheetSync] = useState<SheetSyncSettings>(DEFAULT_SHEET_SYNC);
   const [loading, setLoading] = useState(true);
 
   async function refresh() {
-    const data = await loadFn();
+    const meta = ((user as any)?.user_metadata ?? {}) as { role?: string; merchantId?: string; clientId?: string };
+    let role = meta.role;
+    let merchantId = meta.merchantId;
+    let clientId = meta.clientId;
+    try {
+      const tm = await listTeamMembersFn();
+      setTeamMembers(tm.members ?? []);
+      const rec = (tm.members ?? []).find((m) => m.email && user?.email && m.email.toLowerCase() === user.email.toLowerCase());
+      if (rec) {
+        role = rec.role ?? role;
+        merchantId = rec.merchantId ?? merchantId;
+      }
+    } catch { setTeamMembers([]); }
+    const data = await loadFn({ data: { role, merchantId, clientId, email: user?.email } });
     setOrders(data.orders);
     setProducts(data.products);
     setUsers(data.users ?? []);
@@ -84,6 +108,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     products,
     users,
     channels,
+    teamMembers,
     settings,
     sheetSync,
     loading,
@@ -102,6 +127,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     addUser: async (name) => { const res = await addUserFn({ data: { name } }); await refresh(); return res.user; },
     addChannel: async (name) => { const res = await addChannelFn({ data: { name } }); await refresh(); return res.channel; },
+    addMember: async (m) => { await addTeamMemberFn({ data: m }); await refresh(); },
     addOrder: async (input) => { await createOrderFn({ data: input }); await refresh(); },
     updateStatus: async (id, status) => { await setOrderStatusFn({ data: { id, status } }); await refresh(); },
     deleteOrder: async (id) => { await removeOrdersFn({ data: { ids: [id] } }); await refresh(); },
@@ -114,7 +140,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       await refresh();
       return res;
     },
-  }), [orders, products, users, channels, settings, sheetSync, loading]);
+  }), [orders, products, users, channels, teamMembers, settings, sheetSync, loading]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

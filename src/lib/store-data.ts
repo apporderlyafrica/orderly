@@ -27,6 +27,7 @@ export type Order = {
   paid?: boolean;
   userId?: string;
   channelId?: string;
+  clientEmail?: string;
   status: OrderStatus;
   saleTotal?: number;
   goodsCostTotal?: number;

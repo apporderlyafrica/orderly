@@ -60,3 +60,28 @@ CREATE TABLE IF NOT EXISTS public.app_settings (
   value jsonb NOT NULL,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Espaces de travail (pour ouvrir à d'autres demain : 1 space = 1 client/équipe)
+CREATE TABLE IF NOT EXISTS public.workspaces (
+  id text PRIMARY KEY,
+  name text NOT NULL,
+  owner_id uuid,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- Colonne pour le suivi client (un client voit seulement SES commandes)
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS client_id text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS client_email text;
+
+-- Membres d'un espace (rôle : owner | member | merchant | client)
+CREATE TABLE IF NOT EXISTS public.workspace_members (
+  id text PRIMARY KEY,
+  workspace_id text NOT NULL,
+  email text,
+  name text,
+  role text NOT NULL DEFAULT 'member',
+  merchant_id text,
+  invited_by uuid,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+

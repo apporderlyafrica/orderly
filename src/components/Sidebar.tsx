@@ -24,6 +24,10 @@ export function Sidebar({ onNewOrder }: Props) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
+  const role = ((user as any)?.user_metadata ?? {}).role;
+  const isClient = role === "client";
+  const navLinks = isClient ? [{ to: "/orders", label: "Mes commandes", icon: ShoppingBag }] : mainLinks;
+  const acctLinks = isClient ? [{ to: "/profile", label: "Profil", icon: UserRound }] : accountLinks;
 
   useEffect(() => { setOpen(false); }, [pathname]);
 
@@ -39,22 +43,24 @@ export function Sidebar({ onNewOrder }: Props) {
         </button>
       </div>
 
-      <div className="p-2 space-y-1.5">
-        <button onClick={() => { onNewOrder(); setOpen(false); }}
-          className="w-full inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition shadow-[0_4px_16px_rgba(117,251,144,0.4)]">
-          <Plus className="h-4 w-4" />
-          Nouvelle commande
-        </button>
-        <button onClick={() => { navigate({ to: "/products" }); setOpen(false); }}
-          className="w-full inline-flex items-center justify-center gap-2 h-8 px-3 rounded-md border border-border text-sm font-medium text-foreground hover:bg-accent transition">
-          <Package className="h-3.5 w-3.5" />
-          Nouveau produit
-        </button>
-      </div>
+      {!isClient && (
+        <div className="p-2 space-y-1.5">
+          <button onClick={() => { onNewOrder(); setOpen(false); }}
+            className="w-full inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition shadow-[0_4px_16px_rgba(117,251,144,0.4)]">
+            <Plus className="h-4 w-4" />
+            Nouvelle commande
+          </button>
+          <button onClick={() => { navigate({ to: "/products" }); setOpen(false); }}
+            className="w-full inline-flex items-center justify-center gap-2 h-8 px-3 rounded-md border border-border text-sm font-medium text-foreground hover:bg-accent transition">
+            <Package className="h-3.5 w-3.5" />
+            Nouveau produit
+          </button>
+        </div>
+      )}
 
       <div className="px-4 pt-2 pb-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Navigation</div>
       <nav className="px-2 py-0.5">
-        {mainLinks.map((l) => {
+        {navLinks.map((l) => {
           const active = pathname === l.to;
           const Icon = l.icon;
           return (
@@ -69,7 +75,7 @@ export function Sidebar({ onNewOrder }: Props) {
 
       <div className="px-4 pt-2 pb-0.5 text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Compte</div>
       <nav className="px-2 py-0.5">
-        {accountLinks.map((l) => {
+        {acctLinks.map((l) => {
           const active = pathname === l.to;
           const Icon = l.icon;
           return (

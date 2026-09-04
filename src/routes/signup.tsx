@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Check, Store, Users, Truck, PackageSearch } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { LogoLockup } from "@/components/Logo";
@@ -10,31 +10,56 @@ export const Route = createFileRoute("/signup")({
   head: () => ({ meta: [{ title: "Créer un compte — Orderly" }] }),
 });
 
+const ACCOUNT_TYPES = [
+  { key: "solo", label: "E-commerçant solo", desc: "Je gère mes commandes avec mon équipe", icon: Store },
+  { key: "team", label: "Équipe / service", desc: "Plusieurs utilisateurs, on dispatche", icon: Users },
+  { key: "delivery", label: "Service de livraison", desc: "Je livre pour plusieurs e-commerçants", icon: Truck },
+  { key: "client", label: "Client", desc: "Je veux suivre l'état de ma commande", icon: PackageSearch },
+] as const;
+
+function roleFor(key: string): string {
+  return key === "client" ? "client" : "owner";
+}
+
 function SignupPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [step, setStep] = useState<1 | 2>(1);
+  const [accountType, setAccountType] = useState<string>("solo");
+  const [orgName, setOrgName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (user) navigate({ to: "/dashboard" });
+    if (user) navigate({ to: ((user as any)?.user_metadata?.role === "client") ? "/orders" : "/dashboard" });
   }, [user, navigate]);
+
+  function pickType(key: string) {
+    setAccountType(key);
+    setStep(2);
+  }
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+    const name = (orgName.trim() || email.split("@")[0] || "Mon espace");
     if (password.length < 6) { setError("Mot de passe trop court (6 caractères min)."); return; }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { emailRedirectTo: `${window.location.origin}/dashboard` },
+      options: {
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+        data: { accountType, orgName: name, role: roleFor(accountType) },
+      },
     });
     setLoading(false);
-    if (error) setError(error.message);
-    else navigate({ to: "/dashboard" });
+    if (error) { setError(error.message); return; }
+    if (data.session) navigate({ to: roleFor(accountType) === "client" ? "/orders" : "/dashboard" });
+    else setSent(true);
   }
 
   async function onGoogle() {
@@ -54,38 +79,66 @@ function SignupPage() {
         </Link>
       </header>
       <main className="flex-1 flex items-center justify-center px-5 py-10">
-        <div className="w-full max-w-sm">
+        <div className="w-full max-w-md">
           <div className="mb-8">
             <LogoLockup size={40} />
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight">Créer un compte</h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">Gratuit · 30 secondes.</p>
 
-          <button
-            onClick={onGoogle}
-            className="mt-7 w-full h-10 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-surface text-sm font-medium hover:border-foreground/30 transition"
-          >
-            <GoogleIcon />
-            Continuer avec Google
-          </button>
+          {sent ? (
+            <div className="text-center py-10">
+              <div className="mx-auto h-12 w-12 rounded-full bg-status-delivered-bg text-status-delivered-fg flex items-center justify-center"><Check className="h-6 w-6" /></div>
+              <h1 className="text-xl font-semibold mt-4">Vérifiez votre email</h1>
+              <p className="text-sm text-muted-foreground mt-2">Un lien de confirmation a été envoyé à <span className="font-medium text-foreground">{email}</span>. Cliquez dessus pour activer votre compte.</p>
+              <Link to="/login" className="mt-6 inline-flex items-center h-10 px-4 rounded-md bg-primary text-primary-foreground text-sm font-bold">Aller à la connexion</Link>
+            </div>
+          ) : step === 1 ? (
+            <>
+              <h1 className="text-2xl font-semibold tracking-tight">Comment utilisez-vous Orderly ?</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">Choisissez votre profil — vous pourrez l'adapter plus tard.</p>
+              <div className="mt-7 space-y-2.5">
+                {ACCOUNT_TYPES.map((t) => {
+                  const Icon = t.icon;
+                  return (
+                    <button key={t.key} onClick={() => pickType(t.key)}
+                      className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl border text-left transition ${accountType === t.key ? "border-primary bg-primary/5" : "border-border bg-surface hover:border-foreground/30"}`}>
+                      <span className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center shrink-0"><Icon className="h-5 w-5 text-foreground" /></span>
+                      <span>
+                        <span className="block text-sm font-semibold">{t.label}</span>
+                        <span className="block text-xs text-muted-foreground">{t.desc}</span>
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="my-6 flex items-center gap-3 text-[11px] text-muted-foreground"><div className="h-px bg-border flex-1" /> OU <div className="h-px bg-border flex-1" /></div>
+              <button onClick={onGoogle} className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-md border border-border bg-surface text-sm font-medium hover:border-foreground/30 transition"><GoogleIcon /> Continuer avec Google</button>
+            </>
+          ) : (
+            <>
+              <button onClick={() => setStep(1)} className="text-xs text-muted-foreground hover:text-foreground">← Changer de profil</button>
+              <h1 className="text-2xl font-semibold tracking-tight mt-2">{ACCOUNT_TYPES.find((t) => t.key === accountType)?.label}</h1>
+              <p className="mt-1.5 text-sm text-muted-foreground">{ACCOUNT_TYPES.find((t) => t.key === accountType)?.desc}</p>
 
-          <div className="my-5 flex items-center gap-3 text-[11px] text-muted-foreground">
-            <div className="h-px bg-border flex-1" /> OU <div className="h-px bg-border flex-1" />
-          </div>
-
-          <form onSubmit={onSubmit} className="space-y-3">
-            <Field label="Email">
-              <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input" autoComplete="email" />
-            </Field>
-            <Field label="Mot de passe (min. 6 caractères)">
-              <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="input" autoComplete="new-password" />
-            </Field>
-            {error && <p className="text-xs text-red-600">{error}</p>}
-            <button disabled={loading} className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-md bg-foreground text-background text-sm font-medium disabled:opacity-60">
-              {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              Créer mon compte
-            </button>
-          </form>
+              <form onSubmit={onSubmit} className="mt-6 space-y-3">
+                {accountType !== "client" && (
+                  <Field label="Nom de votre espace">
+                    <input value={orgName} onChange={(e) => setOrgName(e.target.value)} maxLength={60} className="input" placeholder="ex: Boutique Awa" />
+                  </Field>
+                )}
+                <Field label="Email">
+                  <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="input" autoComplete="email" placeholder="vous@exemple.com" />
+                </Field>
+                <Field label="Mot de passe (min. 6 caractères)">
+                  <input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} className="input" autoComplete="new-password" />
+                </Field>
+                {error && <p className="text-xs text-red-600">{error}</p>}
+                <button disabled={loading} className="w-full h-10 inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground text-sm font-bold disabled:opacity-60">
+                  {loading && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                  Créer mon compte
+                </button>
+              </form>
+            </>
+          )}
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
             Déjà un compte ?{" "}
@@ -93,7 +146,7 @@ function SignupPage() {
           </p>
         </div>
       </main>
-      <style>{`.input{width:100%;height:40px;padding:0 12px;border-radius:6px;border:1px solid var(--border);background:var(--surface);font-size:14px;outline:none}.input:focus{border-color:color-mix(in oklab,var(--foreground) 40%,transparent)}`}</style>
+      <style>{`.input{width:100%;height:40px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-size:14px;outline:none}.input:focus{border-color:color-mix(in oklab,var(--foreground) 40%,transparent)}`}</style>
     </div>
   );
 }

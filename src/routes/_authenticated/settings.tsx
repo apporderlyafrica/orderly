@@ -1,7 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Plus, Users, Radio, Wallet, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { Plus, Users, Radio, Wallet, UserPlus, ShieldCheck, UserRound, Mail } from "lucide-react";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { formatXOF } from "@/lib/format";
+
+const ROLE_LABELS: Record<string, string> = {
+  owner: "Propriétaire",
+  member: "Équipe",
+  merchant: "Commerçant",
+  client: "Client",
+};
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
@@ -9,7 +18,25 @@ export const Route = createFileRoute("/_authenticated/settings")({
 });
 
 function SettingsPage() {
-  const { settings, updateSettings, users, channels, addUser, addChannel } = useStore();
+  const { settings, updateSettings, users, channels, addUser, addChannel, teamMembers, addMember } = useStore();
+  const { user } = useAuth();
+  const meta = ((user as any)?.user_metadata ?? {}) as { role?: string; orgName?: string };
+  const isOwner = meta.role === "owner" || meta.role === undefined;
+
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [role, setRole] = useState("member");
+  const [merchantId, setMerchantId] = useState("");
+  const [mErr, setMErr] = useState<string | null>(null);
+
+  async function submitMember(e: React.FormEvent) {
+    e.preventDefault();
+    setMErr(null);
+    if (!name.trim()) { setMErr("Nom requis."); return; }
+    if (email && !email.includes("@")) { setMErr("Email invalide."); return; }
+    await addMember({ name: name.trim(), email: email.trim() || undefined, role, merchantId: role === "merchant" ? (merchantId || undefined) : undefined });
+    setName(""); setEmail(""); setRole("member"); setMerchantId("");
+  }
 
   async function promptAddUser() {
     const raw = window.prompt("Nom du commerçant :");
@@ -95,6 +122,67 @@ function SettingsPage() {
           </ul>
         </section>
       </div>
+
+      {/* Équipe & accès */}
+      <section className="bg-surface border border-border rounded-xl p-5 sm:p-6 mt-6">
+        <div className="flex items-center justify-between mb-1">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">Équipe & accès</h2>
+          </div>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium rounded-full bg-accent text-accent-foreground px-2.5 py-1">
+            <UserRound className="h-3 w-3" /> {ROLE_LABELS[meta.role ?? "owner"]} · {meta.orgName ?? "Mon espace"}
+          </span>
+        </div>
+        <p className="text-xs text-muted-foreground mb-4">
+          Ajoutez les personnes qui travaillent sur cet espace. Rôles : <b>Équipe</b> (voyez tout), <b>Commerçant</b> (voit ses commandes), <b>Client</b> (voit sa commande).
+        </p>
+
+        {isOwner ? (
+          <form onSubmit={submitMember} className="mb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+              <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom" className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email (optionnel)" className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
+              <select value={role} onChange={(e) => setRole(e.target.value)} className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
+                <option value="member">Équipe</option>
+                <option value="merchant">Commerçant</option>
+                <option value="client">Client</option>
+              </select>
+              <button type="submit" className="h-10 inline-flex items-center justify-center gap-2 px-4 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:opacity-90">
+                <UserPlus className="h-4 w-4" /> Ajouter
+              </button>
+            </div>
+            {role === "merchant" && (
+              <div className="mt-2 sm:max-w-sm">
+                <label className="block text-xs font-medium text-muted-foreground mb-1.5">Commerçant rattaché (il ne verra que ses commandes)</label>
+                <select value={merchantId} onChange={(e) => setMerchantId(e.target.value)} className="w-full h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
+                  <option value="">— Aucun —</option>
+                  {users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}
+                </select>
+              </div>
+            )}
+          </form>
+        ) : (
+          <p className="text-xs text-muted-foreground mb-4">Seul le propriétaire peut ajouter des membres.</p>
+        )}
+        {mErr && <p className="text-xs text-status-cancelled-fg bg-status-cancelled-bg rounded-md px-3 py-2 mb-3">{mErr}</p>}
+
+        <ul className="space-y-2">
+          {teamMembers.length === 0 && <p className="text-xs text-muted-foreground">Aucun membre ajouté pour l'instant.</p>}
+          {teamMembers.map((m) => (
+            <li key={m.id} className="flex items-center justify-between gap-3 px-3 py-2 rounded-md bg-muted/40">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="h-8 w-8 rounded-lg bg-primary/20 text-primary-foreground flex items-center justify-center text-xs font-bold shrink-0">{(m.name || m.email || "?").slice(0, 1).toUpperCase()}</span>
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{m.name || "—"}</div>
+                  <div className="text-[11px] text-muted-foreground truncate flex items-center gap-1">{m.email ? <><Mail className="h-3 w-3" /> {m.email}</> : "Sans email"}</div>
+                </div>
+              </div>
+              <span className="shrink-0 inline-flex items-center text-[11px] font-medium rounded-full bg-status-new-bg text-status-new-fg px-2 py-0.5">{ROLE_LABELS[m.role] ?? m.role}</span>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="bg-surface border border-border rounded-xl p-5 sm:p-6 mt-6">
         <h2 className="text-sm font-semibold mb-2">Synchro Google Sheets</h2>

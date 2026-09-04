@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useStore } from "@/lib/store";
+import { useAuth } from "@/lib/auth";
 import { formatXOF } from "@/lib/format";
 import {
   ShoppingBag, CheckCircle2, Truck, PhoneCall, XCircle,
@@ -91,6 +92,8 @@ function orderCogs(o: Order, costOf: (id: string) => number): number {
 
 function Dashboard() {
   const { orders, products, productById, settings } = useStore();
+  const { user } = useAuth();
+  const meta = ((user as any)?.user_metadata ?? {}) as { role?: string; orgName?: string };
 
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
@@ -156,6 +159,10 @@ function Dashboard() {
   return (
     <div className="px-4 sm:px-8 py-6 sm:py-10 max-w-7xl">
       <header className="mb-6 sm:mb-10 text-center">
+        <div className="inline-flex items-center gap-2 mb-3 rounded-full border border-border bg-surface px-3 py-1 text-[11px] text-muted-foreground">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+          {meta.orgName || "Mon espace"} · {meta.role === "client" ? "Client" : meta.role === "merchant" ? "Commerçant" : "Équipe"}
+        </div>
         <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-[0.24em]">Performance globale</p>
         <div className="mt-3 text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight tabular-nums">{formatXOF(revenue)}</div>
         <div className="mt-3 flex flex-wrap items-center justify-center gap-2 text-xs">
