@@ -9,6 +9,7 @@ const ROLE_LABELS: Record<string, string> = {
   owner: "Propriétaire",
   member: "Équipe",
   merchant: "Commerçant",
+  closer: "Closer",
   client: "Client",
 };
 
@@ -145,6 +146,7 @@ function SettingsPage() {
               <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email (optionnel)" className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
               <select value={role} onChange={(e) => setRole(e.target.value)} className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
                 <option value="member">Équipe</option>
+                <option value="closer">Closer</option>
                 <option value="merchant">Commerçant</option>
                 <option value="client">Client</option>
               </select>

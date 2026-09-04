@@ -185,6 +185,7 @@ function Dashboard() {
         <KpiTile icon={TrendingUp} label="Chiffre d'affaires" value={formatXOF(revenue)} hint={`${byStatus.delivered} livrée(s)`} />
         <KpiTile icon={Wallet} label="Frais closing" value={formatXOF(closingTotal)} hint={`${closingCount} × ${formatXOF(settings.closingFee)}`} />
         <KpiTile icon={Truck} label="Frais livraison" value={formatXOF(deliveryTotal)} hint={`Moy. ${formatXOF(avgPerPeriod)}`} />
+        <KpiTile icon={CheckCircle2} label="Taux de clôture" value={`${confirmRate}%`} hint={`${byStatus.confirmed + byStatus.in_transit + byStatus.delivered} clôturées`} />
         <KpiTile icon={TrendingUp} label="Bénéfice net" value={formatXOF(netProfit)} hint={`Marge ${revenue > 0 ? Math.round((netProfit / revenue) * 100) : 0}%`} highlight />
       </section>
 

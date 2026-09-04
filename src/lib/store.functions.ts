@@ -194,7 +194,7 @@ export const addChannel = createServerFn({ method: "POST" }).inputValidator((i: 
   return { channel: { id, name: data.name } };
 });
 
-const teamMemberSchema = z.object({ email: z.string().email().optional(), name: z.string().trim().min(1).max(60), role: z.enum(["owner", "member", "merchant", "client"]), merchantId: z.string().optional() });
+const teamMemberSchema = z.object({ email: z.string().email().optional(), name: z.string().trim().min(1).max(60), role: z.enum(["owner", "member", "merchant", "client", "closer"]), merchantId: z.string().optional() });
 
 export const addTeamMember = createServerFn({ method: "POST" }).inputValidator((i: unknown) => teamMemberSchema.parse(i)).handler(async ({ data }) => {
   const id = `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
