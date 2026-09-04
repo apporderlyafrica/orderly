@@ -1,9 +1,7 @@
-import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, ShoppingBag, Package, Plus, Menu, X, RefreshCw, Settings, UserRound } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Link, useRouterState, useNavigate } from "@tanstack/react-router";
+import { LayoutDashboard, ShoppingBag, Package, Plus, RefreshCw, Settings, UserRound } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { LogoMark } from "@/components/Logo";
-import { useNavigate } from "@tanstack/react-router";
 
 type Props = { onNewOrder: () => void };
 
@@ -22,7 +20,6 @@ const accountLinks = [
 export function Sidebar({ onNewOrder }: Props) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const role = ((user as any)?.user_metadata ?? {}).role;
   const isClient = role === "client";
@@ -31,28 +28,23 @@ export function Sidebar({ onNewOrder }: Props) {
   const navLinks = isLimited ? [{ to: "/orders", label: isClient ? "Mes commandes" : "Commandes", icon: ShoppingBag }] : mainLinks;
   const acctLinks = isLimited ? [{ to: "/profile", label: "Profil", icon: UserRound }] : accountLinks;
 
-  useEffect(() => { setOpen(false); }, [pathname]);
-
   const nav = (
     <>
-      <div className="h-14 px-4 flex items-center border-b border-border justify-between">
+      <div className="h-14 px-4 flex items-center border-b border-border">
         <Link to="/" className="flex items-center gap-2">
           <LogoMark size={26} />
           <span className="text-base font-extrabold tracking-tight text-foreground">Orderly</span>
         </Link>
-        <button className="md:hidden text-muted-foreground hover:text-foreground" onClick={() => setOpen(false)} aria-label="Fermer le menu">
-          <X className="h-5 w-5" />
-        </button>
       </div>
 
       {!isLimited && (
         <div className="p-2 space-y-1.5">
-          <button onClick={() => { onNewOrder(); setOpen(false); }}
+          <button onClick={() => { onNewOrder(); }}
             className="w-full inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition shadow-[0_4px_16px_rgba(117,251,144,0.4)]">
             <Plus className="h-4 w-4" />
             Nouvelle commande
           </button>
-          <button onClick={() => { navigate({ to: "/products" }); setOpen(false); }}
+          <button onClick={() => { navigate({ to: "/products" }); }}
             className="w-full inline-flex items-center justify-center gap-2 h-8 px-3 rounded-md border border-border text-sm font-medium text-foreground hover:bg-accent transition">
             <Package className="h-3.5 w-3.5" />
             Nouveau produit
@@ -106,31 +98,19 @@ export function Sidebar({ onNewOrder }: Props) {
 
   return (
     <>
-      <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 bg-surface border-b border-border flex items-center justify-between px-4">
-        <button onClick={() => setOpen(true)} className="h-9 w-9 inline-flex items-center justify-center rounded-md hover:bg-accent" aria-label="Ouvrir le menu">
-          <Menu className="h-5 w-5" />
-        </button>
-        <div className="flex items-center gap-2.5">
+      <header className="md:hidden fixed top-0 inset-x-0 z-30 h-14 bg-surface/90 backdrop-blur-md border-b border-border flex items-center justify-between px-4">
+        <Link to="/" className="flex items-center gap-2">
           <LogoMark size={28} />
           <span className="text-base font-extrabold tracking-tight">Orderly</span>
-        </div>
-        <button onClick={onNewOrder} className="h-9 w-9 inline-flex items-center justify-center rounded-md bg-primary text-primary-foreground" aria-label="Nouvelle commande">
-          <Plus className="h-5 w-5" />
-        </button>
+        </Link>
+        <Link to="/profile" className="h-9 w-9 inline-flex items-center justify-center rounded-md border border-border hover:bg-accent" aria-label="Profil">
+          <UserRound className="h-5 w-5" />
+        </Link>
       </header>
 
       <aside className="hidden md:flex w-64 shrink-0 border-r border-border bg-sidebar-bg flex-col sticky top-0 h-screen overflow-hidden">
         {nav}
       </aside>
-
-      {open && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
-          <div className="absolute inset-0 bg-foreground/30" onClick={() => setOpen(false)} />
-          <aside className="relative w-64 max-w-[80%] bg-sidebar-bg border-r border-border flex flex-col">
-            {nav}
-          </aside>
-        </div>
-      )}
     </>
   );
 }
