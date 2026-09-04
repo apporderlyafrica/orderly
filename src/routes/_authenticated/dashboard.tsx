@@ -189,29 +189,40 @@ function Dashboard() {
         <KpiTile icon={XCircle} label="Annulées" value={byStatus.cancelled} hint="Perdues" tone="cancelled" />
       </section>
 
-      {/* Toolbar : filtres + période */}
-      <section className="flex flex-col sm:flex-row sm:items-end gap-3 mb-5">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1">
-          <DateField label="Du" value={from} onChange={setFrom} />
-          <DateField label="Au" value={to} onChange={setTo} />
-          <label className="block">
-            <span className="block text-xs font-medium text-muted-foreground mb-1.5">Produit</span>
-            <select value={productFilter} onChange={(e) => setProductFilter(e.target.value)} className="w-full h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
-              <option value="all">Tous les produits</option>
-              {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
-          </label>
-        </div>
-        {hasFilter && (
-          <button onClick={() => { setFrom(""); setTo(""); setProductFilter("all"); }} className="h-10 px-3 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground shrink-0">Réinitialiser</button>
-        )}
-        <div className="inline-flex items-center gap-1 rounded-lg border border-border bg-surface p-1 shrink-0">
-          {PERIODS.map((p) => (
-            <button key={p.key} onClick={() => setPeriod(p.key)}
-              className={`h-8 px-3 rounded-md text-xs font-medium transition ${period === p.key ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}>
-              {p.label}
-            </button>
-          ))}
+      {/* Toolbar : filtres + période (compact) */}
+      <section className="mb-5">
+        <div className="flex flex-col sm:flex-row sm:items-end gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 flex-1">
+            <DateField label="Du" value={from} onChange={setFrom} />
+            <DateField label="Au" value={to} onChange={setTo} />
+            <label className="hidden sm:block">
+              <span className="block text-xs font-medium text-muted-foreground mb-1.5">Produit</span>
+              <select value={productFilter} onChange={(e) => setProductFilter(e.target.value)} className="w-full h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
+                <option value="all">Tous les produits</option>
+                {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </label>
+          </div>
+          <div className="flex items-end gap-2.5 sm:shrink-0">
+            <label className="block sm:hidden flex-1">
+              <span className="block text-xs font-medium text-muted-foreground mb-1.5">Produit</span>
+              <select value={productFilter} onChange={(e) => setProductFilter(e.target.value)} className="w-full h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
+                <option value="all">Tous les produits</option>
+                {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </label>
+            {hasFilter && (
+              <button onClick={() => { setFrom(""); setTo(""); setProductFilter("all"); }} className="h-10 px-3 rounded-md border border-border text-xs text-muted-foreground hover:text-foreground shrink-0">Réinitialiser</button>
+            )}
+            <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-surface p-0.5 shrink-0">
+              {PERIODS.map((p) => (
+                <button key={p.key} onClick={() => setPeriod(p.key)}
+                  className={`h-8 px-2.5 sm:px-3 rounded-md text-xs font-medium transition ${period === p.key ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"}`}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
