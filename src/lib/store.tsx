@@ -10,11 +10,17 @@ import {
   listTeamMembers,
   loadAppData,
   patchProduct,
+  removeChannel,
   removeOrders,
   removeProduct,
+  removeTeamMember,
+  removeUser,
+  renameChannel,
+  renameUser,
   saveSettings,
   saveSheetSync,
   setOrderStatus,
+  updateTeamMember,
 } from "./store.functions";
 import { DEFAULT_SETTINGS, DEFAULT_SHEET_SYNC, type Channel, type DeliveryZone, type Order, type OrderStatus, type Product, type Settings, type SheetSyncSettings, type User } from "./store-data";
 import { useAuth } from "./auth";
@@ -38,6 +44,12 @@ type StoreCtx = {
   addUser: (name: string) => Promise<User>;
   addChannel: (name: string) => Promise<Channel>;
   addMember: (m: { email?: string; name: string; role: string; merchantId?: string }) => Promise<void>;
+  updateMember: (m: TeamMember) => Promise<void>;
+  removeMember: (id: string) => Promise<void>;
+  renameChannel: (id: string, name: string) => Promise<void>;
+  removeChannel: (id: string) => Promise<void>;
+  renameUser: (id: string, name: string) => Promise<void>;
+  removeUser: (id: string) => Promise<void>;
   addOrder: (input: { customer: string; phone: string; productId: string; city: string; upsellIds?: string[]; deliveryZone?: DeliveryZone; paid?: boolean; userId?: string; channelId?: string; clientEmail?: string }) => Promise<void>;
   updateStatus: (id: number, status: OrderStatus) => Promise<void>;
   deleteOrder: (id: number) => Promise<void>;
@@ -67,6 +79,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const addChannelFn = useServerFn(addChannel);
   const addTeamMemberFn = useServerFn(addTeamMember);
   const listTeamMembersFn = useServerFn(listTeamMembers);
+  const updateTeamMemberFn = useServerFn(updateTeamMember);
+  const removeTeamMemberFn = useServerFn(removeTeamMember);
+  const renameChannelFn = useServerFn(renameChannel);
+  const removeChannelFn = useServerFn(removeChannel);
+  const renameUserFn = useServerFn(renameUser);
+  const removeUserFn = useServerFn(removeUser);
   const { user } = useAuth();
 
   const [orders, setOrders] = useState<Order[]>([]);
@@ -132,6 +150,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     addUser: async (name) => { const res = await addUserFn({ data: { name } }); await refresh(); return res.user; },
     addChannel: async (name) => { const res = await addChannelFn({ data: { name } }); await refresh(); return res.channel; },
     addMember: async (m) => { await addTeamMemberFn({ data: m }); await refresh(); },
+    updateMember: async (m) => { await updateTeamMemberFn({ data: m }); await refresh(); },
+    removeMember: async (id) => { await removeTeamMemberFn({ data: { id } }); await refresh(); },
+    renameChannel: async (id, name) => { await renameChannelFn({ data: { id, name } }); await refresh(); },
+    removeChannel: async (id) => { await removeChannelFn({ data: { id } }); await refresh(); },
+    renameUser: async (id, name) => { await renameUserFn({ data: { id, name } }); await refresh(); },
+    removeUser: async (id) => { await removeUserFn({ data: { id } }); await refresh(); },
     addOrder: async (input) => { await createOrderFn({ data: input }); await refresh(); },
     updateStatus: async (id, status) => { await setOrderStatusFn({ data: { id, status } }); await refresh(); },
     deleteOrder: async (id) => { await removeOrdersFn({ data: { ids: [id] } }); await refresh(); },

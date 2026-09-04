@@ -85,3 +85,26 @@ CREATE TABLE IF NOT EXISTS public.workspace_members (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- Droits d'accès pour la clé publishable (rôles anon/authenticated)
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON public.users TO anon, authenticated;
+GRANT ALL ON public.channels TO anon, authenticated;
+GRANT ALL ON public.products TO anon, authenticated;
+GRANT ALL ON public.orders TO anon, authenticated;
+GRANT ALL ON public.app_settings TO anon, authenticated;
+GRANT ALL ON public.workspaces TO anon, authenticated;
+GRANT ALL ON public.workspace_members TO anon, authenticated;
+
+-- Force PostgREST à recharger le cache du schéma (table parfois invisible sinon)
+NOTIFY pgrst, 'reload schema';
+
+-- Désactive RLS sur toutes les tables pour que la clé publishable lise/écrive.
+-- (RLS sera réactivé avec des politiques sécurisées au moment du lancement public.)
+ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.channels DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.app_settings DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workspaces DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.workspace_members DISABLE ROW LEVEL SECURITY;
+

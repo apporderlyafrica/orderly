@@ -196,16 +196,68 @@ export const addChannel = createServerFn({ method: "POST" }).inputValidator((i: 
 
 const teamMemberSchema = z.object({ email: z.string().email().optional(), name: z.string().trim().min(1).max(60), role: z.enum(["owner", "member", "merchant", "client", "closer"]), merchantId: z.string().optional() });
 
+// Les membres d'équipe sont stockés dans app_settings (pas de nouvelle table requise).
 export const addTeamMember = createServerFn({ method: "POST" }).inputValidator((i: unknown) => teamMemberSchema.parse(i)).handler(async ({ data }) => {
   const id = `m-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
-  const rec = { id, email: data.email ?? null, name: data.name, role: data.role, merchant_id: data.merchantId ?? null };
-  const { error } = await db.from("workspace_members").insert(rec);
+  const member = { id, email: data.email ?? null, name: data.name, role: data.role, merchantId: data.merchantId ?? null };
+  const { data: existing, error: e1 } = await db.from("app_settings").select("value").eq("key", "team_members").maybeSingle();
+  if (e1) throw new Error(e1.message);
+  const list: any[] = Array.isArray(existing?.value) ? existing.value : [];
+  list.push(member);
+  const { error } = await db.from("app_settings").upsert({ key: "team_members", value: list });
   if (error) throw new Error(error.message);
-  return { member: { id, email: data.email, name: data.name, role: data.role, merchantId: data.merchantId } };
+  return { member };
 });
 
 export const listTeamMembers = createServerFn({ method: "GET" }).handler(async () => {
-  const { data, error } = await db.from("workspace_members").select("id,email,name,role,merchant_id").order("created_at", { ascending: true });
+  const { data, error } = await db.from("app_settings").select("value").eq("key", "team_members").maybeSingle();
   if (error) throw new Error(error.message);
-  return { members: (data ?? []).map((r: any) => ({ id: r.id, email: r.email, name: r.name, role: r.role, merchantId: r.merchant_id })) };
+  return { members: Array.isArray(data?.value) ? data.value : [] };
+});
+
+const memberEditSchema = z.object({ id: z.string(), name: z.string().trim().min(1).max(60), email: z.string().email().optional(), role: z.enum(["owner", "member", "merchant", "client", "closer"]), merchantId: z.string().optional() });
+const idSchema = z.object({ id: z.string() });
+const nameEditSchema = z.object({ id: z.string(), name: z.string().trim().min(1).max(60) });
+
+export const updateTeamMember = createServerFn({ method: "POST" }).inputValidator((i: unknown) => memberEditSchema.parse(i)).handler(async ({ data }) => {
+  const { data: existing, error: e1 } = await db.from("app_settings").select("value").eq("key", "team_members").maybeSingle();
+  if (e1) throw new Error(e1.message);
+  const list: any[] = Array.isArray(existing?.value) ? existing.value : [];
+  const idx = list.findIndex((m) => m.id === data.id);
+  if (idx < 0) throw new Error("Membre introuvable.");
+  list[idx] = { ...list[idx], name: data.name, email: data.email ?? null, role: data.role, merchantId: data.merchantId ?? null };
+  const { error } = await db.from("app_settings").upsert({ key: "team_members", value: list });
+  if (error) throw new Error(error.message);
+  return { member: list[idx] };
+});
+
+export const removeTeamMember = createServerFn({ method: "POST" }).inputValidator((i: unknown) => idSchema.parse(i)).handler(async ({ data }) => {
+  const { data: existing, error: e1 } = await db.from("app_settings").select("value").eq("key", "team_members").maybeSingle();
+  if (e1) throw new Error(e1.message);
+  const list: any[] = Array.isArray(existing?.value) ? existing.value : [];
+  const next = list.filter((m) => m.id !== data.id);
+  const { error } = await db.from("app_settings").upsert({ key: "team_members", value: next });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+});
+
+export const renameChannel = createServerFn({ method: "POST" }).inputValidator((i: unknown) => nameEditSchema.parse(i)).handler(async ({ data }) => {
+  const { error } = await db.from("channels").update({ name: data.name }).eq("id", data.id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+});
+export const removeChannel = createServerFn({ method: "POST" }).inputValidator((i: unknown) => idSchema.parse(i)).handler(async ({ data }) => {
+  const { error } = await db.from("channels").delete().eq("id", data.id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+});
+export const renameUser = createServerFn({ method: "POST" }).inputValidator((i: unknown) => nameEditSchema.parse(i)).handler(async ({ data }) => {
+  const { error } = await db.from("users").update({ name: data.name }).eq("id", data.id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+});
+export const removeUser = createServerFn({ method: "POST" }).inputValidator((i: unknown) => idSchema.parse(i)).handler(async ({ data }) => {
+  const { error } = await db.from("users").delete().eq("id", data.id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
 });
