@@ -194,7 +194,7 @@ export const addChannel = createServerFn({ method: "POST" }).inputValidator((i: 
   return { channel: { id, name: data.name } };
 });
 
-const teamMemberSchema = z.object({ email: z.string().email().optional(), name: z.string().trim().min(1).max(60), role: z.enum(["owner", "member", "merchant", "client", "closer", "deliverer"]), merchantId: z.string().optional() });
+const teamMemberSchema = z.object({ email: z.string().email(), name: z.string().trim().min(1).max(60), role: z.enum(["owner", "member", "merchant", "client", "closer", "deliverer"]), merchantId: z.string().optional() });
 
 // Les membres d'équipe sont stockés dans app_settings (pas de nouvelle table requise).
 export const addTeamMember = createServerFn({ method: "POST" }).inputValidator((i: unknown) => teamMemberSchema.parse(i)).handler(async ({ data }) => {
@@ -215,7 +215,7 @@ export const listTeamMembers = createServerFn({ method: "GET" }).handler(async (
   return { members: Array.isArray(data?.value) ? data.value : [] };
 });
 
-const memberEditSchema = z.object({ id: z.string(), name: z.string().trim().min(1).max(60), email: z.string().email().optional(), role: z.enum(["owner", "member", "merchant", "client", "closer", "deliverer"]), merchantId: z.string().optional() });
+const memberEditSchema = z.object({ id: z.string(), name: z.string().trim().min(1).max(60), email: z.string().email(), role: z.enum(["owner", "member", "merchant", "client", "closer", "deliverer"]), merchantId: z.string().optional() });
 const idSchema = z.object({ id: z.string() });
 const nameEditSchema = z.object({ id: z.string(), name: z.string().trim().min(1).max(60) });
 

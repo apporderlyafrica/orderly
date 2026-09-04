@@ -41,8 +41,9 @@ function SettingsPage() {
   }
   async function saveEdit(m: { id: string }) {
     setMErr(null);
+    if (!eEmail.trim() || !eEmail.includes("@")) { setMErr("Email obligatoire (pour le matching du compte)."); return; }
     try {
-      await updateMember({ id: m.id, name: eName.trim(), email: eEmail.trim() || undefined, role: eRole, merchantId: eRole === "merchant" ? (eMerchantId || undefined) : undefined });
+      await updateMember({ id: m.id, name: eName.trim(), email: eEmail.trim(), role: eRole, merchantId: eRole === "merchant" ? (eMerchantId || undefined) : undefined });
       setEditId(null);
     } catch (err: any) { setMErr("Impossible de modifier : " + String(err?.message || err).slice(0, 120)); }
   }
@@ -70,9 +71,9 @@ function SettingsPage() {
     e.preventDefault();
     setMErr(null);
     if (!name.trim()) { setMErr("Nom requis."); return; }
-    if (email && !email.includes("@")) { setMErr("Email invalide."); return; }
+    if (!email.trim() || !email.includes("@")) { setMErr("Email obligatoire (pour le matching du compte)."); return; }
     try {
-      await addMember({ name: name.trim(), email: email.trim() || undefined, role, merchantId: role === "merchant" ? (merchantId || undefined) : undefined });
+      await addMember({ name: name.trim(), email: email.trim(), role, merchantId: role === "merchant" ? (merchantId || undefined) : undefined });
       setName(""); setEmail(""); setRole("member"); setMerchantId("");
     } catch (err: any) {
       const msg = String(err?.message || err || "erreur inconnue");
@@ -186,7 +187,7 @@ function SettingsPage() {
           <form onSubmit={submitMember} className="mb-4">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nom" className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
-              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Email (optionnel)" className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
+              <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" required placeholder="Email" className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
               <select value={role} onChange={(e) => setRole(e.target.value)} className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
                 <option value="member">Équipe</option>
                 <option value="closer">Closer</option>
@@ -222,7 +223,7 @@ function SettingsPage() {
                 {editing ? (
                   <div className="space-y-2">
                     <input value={eName} onChange={(e) => setEName(e.target.value)} placeholder="Nom" className="w-full h-9 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
-                    <input value={eEmail} onChange={(e) => setEEmail(e.target.value)} type="email" placeholder="Email (optionnel)" className="w-full h-9 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
+                    <input value={eEmail} onChange={(e) => setEEmail(e.target.value)} type="email" required placeholder="Email" className="w-full h-9 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40" />
                     <select value={eRole} onChange={(e) => setERole(e.target.value)} className="w-full h-9 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
                       <option value="member">Équipe</option>
                       <option value="closer">Closer</option>
