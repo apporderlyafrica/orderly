@@ -174,8 +174,8 @@ function Dashboard() {
         </div>
       </header>
 
-      {/* Bande KPI : une ligne sur desktop, Bénéfice net en tête */}
-      <section className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-11 gap-2 mb-5">
+      {/* Bande KPI : carrousel horizontal (une ligne, swipe mobile, Bénéfice net en tête) */}
+      <section className="flex gap-3 overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0 mb-5 scroll-smooth snap-x snap-mandatory [scrollbar-width:thin] [scrollbar-color:var(--border)_transparent]">
         <KpiTile icon={TrendingUp} label="Bénéfice net" value={formatXOF(netProfit)} hint={`Marge ${revenue > 0 ? Math.round((netProfit / revenue) * 100) : 0}%`} highlight />
         <KpiTile icon={TrendingUp} label="Chiffre d'affaires" value={formatXOF(revenue)} hint={`${byStatus.delivered} livrée(s)`} />
         <KpiTile icon={Wallet} label="Frais closing" value={formatXOF(closingTotal)} hint={`${closingCount} × ${formatXOF(settings.closingFee)}`} />
@@ -346,13 +346,13 @@ const toneClass: Record<string, string> = {
 function KpiTile({ icon: Icon, label, value, hint, tone, highlight = false }: { icon: any; label: string; value: number | string; hint: string; tone?: string; highlight?: boolean }) {
   const toneCls = tone ? toneClass[tone] : "text-foreground";
   return (
-    <div className={`flex flex-col justify-between rounded-lg border px-2.5 py-2 min-h-[68px] ${highlight ? "bg-primary text-primary-foreground border-primary shadow-[0_6px_20px_-8px_rgba(117,251,144,0.7)]" : "bg-surface border-border"}`}>
-      <div className="flex items-center justify-between gap-1">
-        <span className={`text-[9px] uppercase tracking-wide font-medium truncate ${highlight ? "opacity-80" : "text-muted-foreground"}`}>{label}</span>
-        <Icon className={`h-3.5 w-3.5 shrink-0 ${highlight ? "opacity-80" : "text-muted-foreground"}`} />
+    <div className={`snap-start flex-none w-40 flex flex-col justify-between rounded-xl border px-3 py-2.5 min-h-[82px] ${highlight ? "bg-primary text-primary-foreground border-primary shadow-[0_6px_20px_-8px_rgba(117,251,144,0.7)]" : "bg-surface border-border"}`}>
+      <div className="flex items-center justify-between gap-1.5">
+        <span className={`text-[11px] uppercase tracking-wide font-medium truncate ${highlight ? "opacity-80" : "text-muted-foreground"}`}>{label}</span>
+        <Icon className={`h-4 w-4 shrink-0 ${highlight ? "opacity-80" : "text-muted-foreground"}`} />
       </div>
-      <div className={`mt-1 text-base font-bold tabular-nums tracking-tight truncate ${highlight ? "" : toneCls}`}>{value}</div>
-      <div className={`text-[9px] mt-0.5 truncate ${highlight ? "opacity-80" : "text-muted-foreground"}`}>{hint}</div>
+      <div className={`mt-1.5 text-xl font-bold tabular-nums tracking-tight truncate ${highlight ? "" : toneCls}`}>{value}</div>
+      <div className={`text-[11px] mt-0.5 truncate ${highlight ? "opacity-80" : "text-muted-foreground"}`}>{hint}</div>
     </div>
   );
 }
