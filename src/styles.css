@@ -1,0 +1,102 @@
+@import "tailwindcss" source(none);
+@source "../src";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-sidebar-bg: var(--sidebar-bg);
+  --color-surface: var(--surface);
+
+  /* Status badge tokens */
+  --color-status-new-bg: var(--status-new-bg);
+  --color-status-new-fg: var(--status-new-fg);
+  --color-status-callback-bg: var(--status-callback-bg);
+  --color-status-callback-fg: var(--status-callback-fg);
+  --color-status-confirmed-bg: var(--status-confirmed-bg);
+  --color-status-confirmed-fg: var(--status-confirmed-fg);
+  --color-status-delivered-bg: var(--status-delivered-bg);
+  --color-status-delivered-fg: var(--status-delivered-fg);
+  --color-status-cancelled-bg: var(--status-cancelled-bg);
+  --color-status-cancelled-fg: var(--status-cancelled-fg);
+}
+
+:root {
+  --radius: 0.75rem;
+  --background: #f7f7f2;
+  --foreground: #0b0b0a;
+  --surface: #ffffff;
+  --sidebar-bg: #fbfbf8;
+
+  --card: #ffffff;
+  --card-foreground: #0b0b0a;
+  --popover: #ffffff;
+  --popover-foreground: #0b0b0a;
+
+  --primary: #75fb90;
+  --primary-foreground: #0a120b;
+  --secondary: #f2f2ec;
+  --secondary-foreground: #0b0b0a;
+  --muted: #f2f2ec;
+  --muted-foreground: #6b6b64;
+  --accent: #e3fbe9;
+  --accent-foreground: #0a120b;
+  --destructive: oklch(0.58 0.2 27);
+  --destructive-foreground: #ffffff;
+
+  --border: #e7e7df;
+  --input: #e7e7df;
+  --ring: #75fb90;
+
+  /* Status colors (matte, flat) */
+  --status-new-bg: oklch(0.94 0.04 240);
+  --status-new-fg: oklch(0.38 0.13 250);
+  --status-callback-bg: oklch(0.94 0.04 300);
+  --status-callback-fg: oklch(0.4 0.15 300);
+  --status-confirmed-bg: oklch(0.93 0.06 150);
+  --status-confirmed-fg: oklch(0.38 0.12 150);
+  --status-delivered-bg: oklch(0.93 0.07 160);
+  --status-delivered-fg: oklch(0.38 0.13 160);
+  --status-cancelled-bg: oklch(0.94 0.04 25);
+  --status-cancelled-fg: oklch(0.45 0.17 25);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: "Urbanist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 40%, transparent);
+  }
+  html, body, #root { height: 100%; }
+}
