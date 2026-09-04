@@ -22,11 +22,14 @@ export function Sidebar({ onNewOrder }: Props) {
   const navigate = useNavigate();
   const { user } = useAuth();
   const role = ((user as any)?.user_metadata ?? {}).role;
-  const isClient = role === "client";
+  const isOwner = role === "owner" || role === "member" || !role;
   const isCloser = role === "closer";
-  const isLimited = isClient || isCloser;
-  const navLinks = isLimited ? [{ to: "/orders", label: isClient ? "Mes commandes" : "Commandes", icon: ShoppingBag }] : mainLinks;
-  const acctLinks = isLimited ? [{ to: "/profile", label: "Profil", icon: UserRound }] : accountLinks;
+  const isDeliverer = role === "deliverer";
+  const isMerchant = role === "merchant";
+  const isClient = role === "client";
+  const showActions = isOwner || isCloser;
+  const navLinks = isOwner ? mainLinks : isCloser ? [{ to: "/orders", label: "Commandes", icon: ShoppingBag }, { to: "/products", label: "Produits", icon: Package }] : isDeliverer ? [{ to: "/orders", label: "Commandes", icon: ShoppingBag }] : [{ to: "/orders", label: "Mes commandes", icon: ShoppingBag }];
+  const acctLinks = isOwner ? accountLinks : [{ to: "/profile", label: "Profil", icon: UserRound }];
 
   const nav = (
     <>
@@ -37,7 +40,7 @@ export function Sidebar({ onNewOrder }: Props) {
         </Link>
       </div>
 
-      {!isLimited && (
+      {showActions && (
         <div className="p-2 space-y-1.5">
           <button onClick={() => { onNewOrder(); }}
             className="w-full inline-flex items-center justify-center gap-2 h-9 px-3 rounded-md bg-primary text-primary-foreground text-sm font-bold hover:opacity-90 transition shadow-[0_4px_16px_rgba(117,251,144,0.4)]">

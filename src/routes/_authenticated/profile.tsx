@@ -23,7 +23,7 @@ function ProfilePage() {
 
   const meta = ((user as any)?.user_metadata ?? {}) as { role?: string; orgName?: string; accountType?: string };
   const roleLabel = (role?: string) =>
-    role === "client" ? "Client" : role === "merchant" ? "Commerçant" : role === "closer" ? "Closer" : "Propriétaire / Équipe";
+    role === "client" ? "Client" : role === "merchant" ? "Commerçant" : role === "closer" ? "Closer" : role === "deliverer" ? "Livreur" : "Propriétaire / Équipe";
 
   return (
     <div className="px-4 sm:px-8 py-6 sm:py-10 max-w-3xl mx-auto">

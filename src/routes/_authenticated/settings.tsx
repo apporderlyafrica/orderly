@@ -10,6 +10,7 @@ const ROLE_LABELS: Record<string, string> = {
   member: "Équipe",
   merchant: "Commerçant",
   closer: "Closer",
+  deliverer: "Livreur",
   client: "Client",
 };
 
@@ -189,6 +190,7 @@ function SettingsPage() {
               <select value={role} onChange={(e) => setRole(e.target.value)} className="h-10 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
                 <option value="member">Équipe</option>
                 <option value="closer">Closer</option>
+                <option value="deliverer">Livreur</option>
                 <option value="merchant">Commerçant</option>
                 <option value="client">Client</option>
               </select>
@@ -224,6 +226,7 @@ function SettingsPage() {
                     <select value={eRole} onChange={(e) => setERole(e.target.value)} className="w-full h-9 px-3 rounded-md border border-border bg-surface text-sm outline-none focus:border-foreground/40">
                       <option value="member">Équipe</option>
                       <option value="closer">Closer</option>
+                      <option value="deliverer">Livreur</option>
                       <option value="merchant">Commerçant</option>
                       <option value="client">Client</option>
                     </select>

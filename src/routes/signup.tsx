@@ -34,7 +34,7 @@ function SignupPage() {
   const [sent, setSent] = useState(false);
 
   useEffect(() => {
-    if (user) { const r = (user as any)?.user_metadata?.role; navigate({ to: (r === "client" || r === "closer") ? "/orders" : "/dashboard" }); }
+    if (user) { const r = (user as any)?.user_metadata?.role; const toOrders = ["client","merchant","closer","deliverer"].includes(r); navigate({ to: toOrders ? "/orders" : "/dashboard" }); }
   }, [user, navigate]);
 
   function pickType(key: string) {

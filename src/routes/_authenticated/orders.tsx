@@ -17,7 +17,7 @@ function OrdersPage() {
   const { orders, products, productById, updateStatus, deleteOrder, deleteOrders, settings, users, channels } = useStore();
   const { user } = useAuth();
   const role = ((user as any)?.user_metadata ?? {}).role;
-  const isClient = role === "client";
+  const isReadOnly = role === "client" || role === "merchant";
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
   const [from, setFrom] = useState("");
@@ -66,7 +66,7 @@ function OrdersPage() {
 
   const hasFilters = from || to || productFilter !== "all" || merchantFilter !== "all" || channelFilter !== "all";
 
-  if (isClient) {
+  if (isReadOnly) {
     return (
       <div className="px-4 sm:px-8 py-6 sm:py-10 max-w-3xl">
         <header className="mb-6">

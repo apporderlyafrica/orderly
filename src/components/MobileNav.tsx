@@ -8,23 +8,37 @@ export function MobileNav({ onNewOrder }: Props) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const { user } = useAuth();
   const role = ((user as any)?.user_metadata ?? {}).role;
-  const isClient = role === "client";
+  const isOwner = role === "owner" || role === "member" || !role;
   const isCloser = role === "closer";
-  const isLimited = isClient || isCloser;
+  const isDeliverer = role === "deliverer";
+  const isMerchant = role === "merchant";
+  const isClient = role === "client";
+  const showActions = isOwner || isCloser;
 
-  const tabs = isLimited
-    ? [
-        { to: "/orders", label: isClient ? "Mes commandes" : "Commandes", icon: ShoppingBag },
-        { to: "/profile", label: "Profil", icon: UserRound },
-      ]
-    : [
-        { to: "/dashboard", label: "Accueil", icon: LayoutDashboard },
-        { to: "/orders", label: "Commandes", icon: ShoppingBag },
-        { to: "/products", label: "Produits", icon: Package },
-        { to: "/settings", label: "Réglages", icon: Settings },
-      ];
+  const tabs =
+    isOwner
+      ? [
+          { to: "/dashboard", label: "Accueil", icon: LayoutDashboard },
+          { to: "/orders", label: "Commandes", icon: ShoppingBag },
+          { to: "/products", label: "Produits", icon: Package },
+          { to: "/settings", label: "Réglages", icon: Settings },
+        ]
+      : isCloser
+        ? [
+            { to: "/orders", label: "Commandes", icon: ShoppingBag },
+            { to: "/products", label: "Produits", icon: Package },
+          ]
+        : isDeliverer
+          ? [
+              { to: "/orders", label: "Commandes", icon: ShoppingBag },
+              { to: "/profile", label: "Profil", icon: UserRound },
+            ]
+          : [
+              { to: "/orders", label: "Mes commandes", icon: ShoppingBag },
+              { to: "/profile", label: "Profil", icon: UserRound },
+            ];
 
-  if (isLimited) {
+  if (!showActions) {
     return (
       <nav className="md:hidden fixed bottom-0 inset-x-0 z-40 h-16 bg-surface/90 backdrop-blur-md border-t border-border flex items-stretch px-2">
         {tabs.map((t) => {
